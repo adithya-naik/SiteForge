@@ -9,8 +9,13 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-    - uses: actions/first-interaction@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Message that will be displayed on users' first issue"
-        pr-message: "Message that will be displayed on users' first pull request"
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            👋 Hey there, thanks for opening your first issue on SiteForge!
+            @adithya-naik will review it shortly. Please make sure you've filled out all
+            relevant details to help us resolve it faster.
+          pr-message: |
+            🎉 Thanks for your first pull request on SiteForge, @${{ github.actor }}!
+            Please ensure your PR follows the template and all CI checks pass.
