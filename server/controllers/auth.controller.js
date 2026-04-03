@@ -16,7 +16,7 @@ export const googleAuth = async (req,res)=>{
       user = await User.create({name,email,avatar})
     }
 
-    const token = await jwt.sign({id:user._id},process.env.JWTSECRET,{expiresIn:"3d"})
+    const token = jwt.sign({id:user._id},process.env.JWTSECRET,{expiresIn:"7d"})
     
     res.cookie("token",token,{
       httpOnly:true,
