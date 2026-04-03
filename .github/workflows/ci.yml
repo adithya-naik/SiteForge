@@ -15,16 +15,16 @@ jobs:
       # Backend
       - name: Install backend dependencies
         run: |
-          cd backend
+          cd server
           npm install
 
       # # Frontend
       # - name: Install frontend dependencies
       #   run: |
-      #     cd frontend
+      #     cd client
       #     npm install
 
       # - name: Build frontend
       #   run: |
-      #     cd frontend
+      #     cd client
       #     npm run build || echo "No build step"
