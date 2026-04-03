@@ -1,0 +1,14 @@
+version: 2
+
+updates:
+  # Backend dependencies
+  - package-ecosystem: "npm"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"

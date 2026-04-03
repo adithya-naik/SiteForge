@@ -9,10 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout your repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Backend
+      # ------------------------
+      # Backend (server) steps
+      # ------------------------
+      - name: Cache backend node modules
+        uses: actions/cache@v3
+        with:
+          path: server/node_modules
+          key: server-node-modules-${{ hashFiles('server/package-lock.json') }}
+          restore-keys: |
+            server-node-modules-
+
       - name: Install backend dependencies
         run: |
           cd server
@@ -23,7 +34,17 @@ jobs:
           cd server
           npm run lint || echo "No lint configured"
 
-      # # Frontend
+      # ------------------------
+      # Frontend (client) steps
+      # ------------------------
+      # - name: Cache frontend node modules
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: client/node_modules
+      #     key: client-node-modules-${{ hashFiles('client/package-lock.json') }}
+      #     restore-keys: |
+      #       client-node-modules-
+
       # - name: Install frontend dependencies
       #   run: |
       #     cd client
@@ -38,3 +59,11 @@ jobs:
       #   run: |
       #     cd client
       #     npm run build || echo "No build step"
+
+      # ------------------------
+      # CodeRabbit
+      # ------------------------
+      - name: Run CodeRabbit
+        uses: coderabbitio/code-review-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
