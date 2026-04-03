@@ -32,7 +32,17 @@ jobs:
       - name: Lint backend
         run: |
           cd server
-          npm run lint || echo "No lint configured"
+          npm run lint
+
+      - name: Auto-fix backend lint
+        run: |
+          cd server
+          npm run lint:fix
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "ci: auto-fix lint issues" || echo "No lint changes"
+          git push origin HEAD:${{ github.head_ref }} || echo "Push failed"
 
       # ------------------------
       # Frontend (client) steps
@@ -53,9 +63,9 @@ jobs:
       # - name: Lint frontend
       #   run: |
       #     cd client
-      #     npm run lint || echo "No lint configured"
+      #     npm run lint
 
       # - name: Build frontend
       #   run: |
       #     cd client
-      #     npm run build || echo "No build step"
+      #     npm run build
