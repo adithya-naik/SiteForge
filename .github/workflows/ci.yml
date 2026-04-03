@@ -29,11 +29,6 @@ jobs:
           cd server
           npm install
 
-      - name: Lint backend
-        run: |
-          cd server
-          npm run lint
-
       - name: Auto-fix backend lint
         run: |
           cd server
@@ -43,6 +38,11 @@ jobs:
           git add .
           git commit -m "ci: auto-fix lint issues" || echo "No lint changes"
           git push origin HEAD:${{ github.head_ref }} || echo "Push failed"
+          
+      - name: Lint backend
+        run: |
+          cd server
+          npm run lint
 
       # ------------------------
       # Frontend (client) steps
