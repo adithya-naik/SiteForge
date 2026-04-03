@@ -1,8 +1,10 @@
+# This file is optional now since we're using github-script
+# Keeping it for reference or future use
 addReviewers: false
 addAssignees: true
 
-assignees:
-  - adithya-naik
+# No hardcoded assignees needed anymore!
+# The workflow will dynamically assign to PR creator
 
 skipKeywords:
   - wip
