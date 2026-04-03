@@ -64,6 +64,6 @@ jobs:
       # CodeRabbit
       # ------------------------
       - name: Run CodeRabbit
-        uses: coderabbitio/code-review-action@v1
+        uses: coderabbit/code-review-action@latest
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
