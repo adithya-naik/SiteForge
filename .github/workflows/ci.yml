@@ -1,8 +1,8 @@
 name: MERN CI
 
 on:
-  push:
   pull_request:
+  push:
 
 jobs:
   build:
@@ -18,11 +18,21 @@ jobs:
           cd server
           npm install
 
+      - name: Lint backend
+        run: |
+          cd server
+          npm run lint || echo "No lint configured"
+
       # # Frontend
       # - name: Install frontend dependencies
       #   run: |
       #     cd client
       #     npm install
+
+      # - name: Lint frontend
+      #   run: |
+      #     cd client
+      #     npm run lint || echo "No lint configured"
 
       # - name: Build frontend
       #   run: |
