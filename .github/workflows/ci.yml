@@ -42,8 +42,10 @@ jobs:
           npm run lint:fix
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin ${{ github.head_ref }}
           git add -A
+          git stash
+          git pull --rebase origin ${{ github.head_ref }}
+          git stash pop
           git diff --staged --quiet || git commit -m "ci: auto-fix backend lint issues"
           git push origin HEAD:${{ github.head_ref }} || echo "No changes to push"
 
@@ -74,8 +76,10 @@ jobs:
           npm run lint:fix
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin ${{ github.head_ref }}
           git add -A
+          git stash
+          git pull --rebase origin ${{ github.head_ref }}
+          git stash pop
           git diff --staged --quiet || git commit -m "ci: auto-fix frontend lint issues"
           git push origin HEAD:${{ github.head_ref }} || echo "No changes to push"
 
