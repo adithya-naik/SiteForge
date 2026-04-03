@@ -11,14 +11,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: false
 
     steps:
-      # Step 1: Checkout your repo (fetch full history for rebase)
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Switch to branch
+        run: git checkout ${{ github.head_ref || github.ref_name }}
 
       # ------------------------
       # Backend (server) steps
@@ -34,25 +37,52 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd server
-          npm install
+          npm ci --prefer-offline --no-audit --fund=false
+        continue-on-error: false
 
       - name: Auto-fix backend lint
+        id: backend-lint-fix
         run: |
           cd server
-          npm run lint:fix
+          
+          # Run lint fix (don't fail if there are errors)
+          npm run lint:fix --if-present || true
+          
+          # Check if there are changes to commit
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No backend lint issues to fix"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          
+          # Configure git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git stash
-          git pull --rebase origin ${{ github.head_ref }}
-          git stash pop
-          git diff --staged --quiet || git commit -m "ci: auto-fix backend lint issues"
-          git push origin HEAD:${{ github.head_ref }} || echo "No changes to push"
+          
+          # Commit changes
+          COMMIT_MSG="ci: auto-fix backend lint issues [skip ci]
+          
+          Co-authored-by: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          Triggered by: #${{ github.event.pull_request.number }}"
+          
+          git commit -m "$COMMIT_MSG"
+          
+          # Push changes (with retry logic)
+          for i in {1..3}; do
+            git pull --rebase origin ${{ github.head_ref || github.ref_name }} && \
+            git push origin HEAD:${{ github.head_ref || github.ref_name }} && \
+            break || sleep 5
+          done
 
       - name: Lint backend
+        id: backend-lint
         run: |
           cd server
           npm run lint
+        continue-on-error: false
 
       # ------------------------
       # Frontend (client) steps
@@ -68,27 +98,85 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd client
-          npm install
+          npm ci --prefer-offline --no-audit --fund=false
+        continue-on-error: false
 
       - name: Auto-fix frontend lint
+        id: frontend-lint-fix
         run: |
           cd client
-          npm run lint:fix
+          
+          # Run lint fix (don't fail if there are errors)
+          npm run lint:fix --if-present || true
+          
+          # Check if there are changes to commit
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No frontend lint issues to fix"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          
+          # Configure git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git stash
-          git pull --rebase origin ${{ github.head_ref }}
-          git stash pop
-          git diff --staged --quiet || git commit -m "ci: auto-fix frontend lint issues"
-          git push origin HEAD:${{ github.head_ref }} || echo "No changes to push"
+          
+          # Commit changes
+          COMMIT_MSG="ci: auto-fix frontend lint issues [skip ci]
+          
+          Co-authored-by: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          Triggered by: #${{ github.event.pull_request.number }}"
+          
+          git commit -m "$COMMIT_MSG"
+          
+          # Push changes (with retry logic)
+          for i in {1..3}; do
+            git pull --rebase origin ${{ github.head_ref || github.ref_name }} && \
+            git push origin HEAD:${{ github.head_ref || github.ref_name }} && \
+            break || sleep 5
+          done
 
       - name: Lint frontend
+        id: frontend-lint
         run: |
           cd client
           npm run lint
+        continue-on-error: false
 
       - name: Build frontend
+        id: frontend-build
         run: |
           cd client
           npm run build
+        continue-on-error: false
+
+      # ------------------------
+      # Summary step
+      # ------------------------
+      - name: Summary
+        if: always()
+        run: |
+          echo "## CI Run Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Install | ${{ steps.backend-install.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Lint Fix | ${{ steps.backend-lint-fix.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Lint | ${{ steps.backend-lint.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Install | ${{ steps.frontend-install.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Lint Fix | ${{ steps.frontend-lint-fix.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Lint | ${{ steps.frontend-lint.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Build | ${{ steps.frontend-build.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.backend-lint.outcome }}" != "success" ] || \
+             [ "${{ steps.frontend-lint.outcome }}" != "success" ] || \
+             [ "${{ steps.frontend-build.outcome }}" != "success" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **CI Failed!** Please check the logs above." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All checks passed!**" >> $GITHUB_STEP_SUMMARY
+          fi
