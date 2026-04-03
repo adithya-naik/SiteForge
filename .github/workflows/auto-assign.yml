@@ -1,0 +1,15 @@
+name: Auto Assigner
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: kentaro-m/auto-assign-action@v1
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          assignees: "your-github-username" # Can be multiple, comma-separated
