@@ -1,0 +1,12 @@
+addReviewers: true
+addAssignees: author  # auto-assigns the PR author to themselves
+
+reviewers:
+  - adithya-naik  # 🔁 replace with your actual GitHub username
+
+numberOfReviewers: 1
+
+skipKeywords:
+  - wip
+  - draft
+  - do-not-review

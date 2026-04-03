@@ -1,0 +1,81 @@
+# ─── Backend Core ───────────────────────────────────────────
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 'server/**'
+
+server-config:
+  - changed-files:
+    - any-glob-to-any-file: 'server/config/**'
+
+# ─── Auth ────────────────────────────────────────────────────
+authentication:
+  - changed-files:
+    - any-glob-to-any-file: 'server/controllers/auth*'
+    - any-glob-to-any-file: 'server/routes/auth*'
+    - any-glob-to-any-file: 'server/models/user*'
+
+# ─── MVC Layers ──────────────────────────────────────────────
+controllers:
+  - changed-files:
+    - any-glob-to-any-file: 'server/controllers/**'
+
+models:
+  - changed-files:
+    - any-glob-to-any-file: 'server/models/**'
+
+routes:
+  - changed-files:
+    - any-glob-to-any-file: 'server/routes/**'
+
+# ─── Database ────────────────────────────────────────────────
+database:
+  - changed-files:
+    - any-glob-to-any-file: 'server/config/db.js'
+    - any-glob-to-any-file: 'server/models/**'
+
+# ─── Dependencies ────────────────────────────────────────────
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: 'server/package.json'
+    - any-glob-to-any-file: 'server/package-lock.json'
+
+# ─── CI/CD & GitHub ──────────────────────────────────────────
+ci/cd:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+
+github-config:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+    - any-glob-to-any-file: '.github/dependabot.yml'
+    - any-glob-to-any-file: '.github/pull_request_template.md'
+
+# ─── Configuration & Env ─────────────────────────────────────
+configuration:
+  - changed-files:
+    - any-glob-to-any-file: 'server/eslint.config.js'
+    - any-glob-to-any-file: 'server/.env'
+    - any-glob-to-any-file: '.gitignore'
+
+environment:
+  - changed-files:
+    - any-glob-to-any-file: '**/.env'
+    - any-glob-to-any-file: '**/.env.example'
+
+# ─── Docs ────────────────────────────────────────────────────
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: '*.md'
+    - any-glob-to-any-file: '**/*.md'
+
+license:
+  - changed-files:
+    - any-glob-to-any-file: 'LICENSE'
+
+# ─── Security ────────────────────────────────────────────────
+security:
+  - changed-files:
+    - any-glob-to-any-file: 'server/middleware/auth*'
+    - any-glob-to-any-file: 'server/middleware/security*'
+    - any-glob-to-any-file: 'server/config/cors*'
+    - any-glob-to-any-file: '**/.env'
