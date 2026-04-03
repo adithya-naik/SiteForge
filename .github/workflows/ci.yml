@@ -3,6 +3,9 @@ name: MERN CI
 on:
   pull_request:
   push:
+    
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -47,25 +50,35 @@ jobs:
       # ------------------------
       # Frontend (client) steps
       # ------------------------
-      # - name: Cache frontend node modules
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: client/node_modules
-      #     key: client-node-modules-${{ hashFiles('client/package-lock.json') }}
-      #     restore-keys: |
-      #       client-node-modules-
+      - name: Cache frontend node modules
+        uses: actions/cache@v3
+        with:
+          path: client/node_modules
+          key: client-node-modules-${{ hashFiles('client/package-lock.json') }}
+          restore-keys: |
+            client-node-modules-
 
-      # - name: Install frontend dependencies
-      #   run: |
-      #     cd client
-      #     npm install
+      - name: Install frontend dependencies
+        run: |
+          cd client
+          npm install
 
-      # - name: Lint frontend
-      #   run: |
-      #     cd client
-      #     npm run lint
+      - name: Auto-fix frontend lint
+        run: |
+          cd client
+          npm run lint:fix
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "ci: auto-fix lint issues" || echo "No lint changes"
+          git push origin HEAD:${{ github.head_ref }} || echo "Push failed"
 
-      # - name: Build frontend
-      #   run: |
-      #     cd client
-      #     npm run build
+      - name: Lint frontend
+        run: |
+          cd client
+          npm run lint
+
+      - name: Build frontend
+        run: |
+          cd client
+          npm run build
