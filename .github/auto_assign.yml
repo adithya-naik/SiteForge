@@ -1,0 +1,10 @@
+addReviewers: false
+addAssignees: true
+
+assignees:
+  - adithya-naik
+
+skipKeywords:
+  - wip
+  - draft
+  - do-not-review

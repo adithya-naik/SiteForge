@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   assign:
     runs-on: ubuntu-latest
@@ -12,4 +16,4 @@ jobs:
       - uses: kentaro-m/auto-assign-action@v1
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          assignees: "your-github-username" # Can be multiple, comma-separated
+          configuration-file: ".github/auto_assign.yml"
