@@ -1,12 +1,3 @@
-# ─── Backend Core ───────────────────────────────────────────
-backend:
-  - changed-files:
-    - any-glob-to-any-file: 'server/**'
-
-server-config:
-  - changed-files:
-    - any-glob-to-any-file: 'server/config/**'
-
 # ─── Auth ────────────────────────────────────────────────────
 authentication:
   - changed-files:
@@ -31,7 +22,11 @@ routes:
 database:
   - changed-files:
     - any-glob-to-any-file: 'server/config/db.js'
-    - any-glob-to-any-file: 'server/models/**'
+
+# ─── Server Config ───────────────────────────────────────────
+server-config:
+  - changed-files:
+    - any-glob-to-any-file: 'server/config/**'
 
 # ─── Dependencies ────────────────────────────────────────────
 dependencies:
@@ -39,24 +34,26 @@ dependencies:
     - any-glob-to-any-file: 'server/package.json'
     - any-glob-to-any-file: 'server/package-lock.json'
 
-# ─── CI/CD & GitHub ──────────────────────────────────────────
+# ─── CI/CD ───────────────────────────────────────────────────
 ci/cd:
   - changed-files:
     - any-glob-to-any-file: '.github/workflows/**'
 
+# ─── GitHub Config ───────────────────────────────────────────
 github-config:
   - changed-files:
-    - any-glob-to-any-file: '.github/**'
     - any-glob-to-any-file: '.github/dependabot.yml'
     - any-glob-to-any-file: '.github/pull_request_template.md'
+    - any-glob-to-any-file: '.github/auto_assign.yml'
+    - any-glob-to-any-file: '.github/labeler.yml'
 
-# ─── Configuration & Env ─────────────────────────────────────
+# ─── Configuration ───────────────────────────────────────────
 configuration:
   - changed-files:
     - any-glob-to-any-file: 'server/eslint.config.js'
-    - any-glob-to-any-file: 'server/.env'
     - any-glob-to-any-file: '.gitignore'
 
+# ─── Environment ─────────────────────────────────────────────
 environment:
   - changed-files:
     - any-glob-to-any-file: '**/.env'
@@ -68,6 +65,7 @@ documentation:
     - any-glob-to-any-file: '*.md'
     - any-glob-to-any-file: '**/*.md'
 
+# ─── License ─────────────────────────────────────────────────
 license:
   - changed-files:
     - any-glob-to-any-file: 'LICENSE'
@@ -78,4 +76,3 @@ security:
     - any-glob-to-any-file: 'server/middleware/auth*'
     - any-glob-to-any-file: 'server/middleware/security*'
     - any-glob-to-any-file: 'server/config/cors*'
-    - any-glob-to-any-file: '**/.env'
