@@ -7,7 +7,16 @@ const app = express();
 
 const port = process.env.PORT || 5000;
 
-app.listen(port,()=>{
-  console.log(`Server Started at ${port}`);
-  dbConnect();
-})
+const startServer = async () => {
+   try {
+     await dbConnect();
+    app.listen(port, () => {
+       console.log(`Server Started at ${port}`);
+     });
+   } catch (error) {
+     console.error("Startup failed:", error.message);
+     process.exit(1);
+   }
+ };
+ 
+startServer();

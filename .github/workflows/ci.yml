@@ -59,11 +59,3 @@ jobs:
       #   run: |
       #     cd client
       #     npm run build || echo "No build step"
-
-      # ------------------------
-      # CodeRabbit
-      # ------------------------
-      - name: Run CodeRabbit
-        uses: coderabbitio/code-review-action@v1
-        with:
-          coderabbit-token: ${{ secrets.CODERABBIT_TOKEN }}
