@@ -1,0 +1,30 @@
+name: MERN CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Backend
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
+
+      # # Frontend
+      # - name: Install frontend dependencies
+      #   run: |
+      #     cd frontend
+      #     npm install
+
+      # - name: Build frontend
+      #   run: |
+      #     cd frontend
+      #     npm run build || echo "No build step"
