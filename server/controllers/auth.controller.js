@@ -24,7 +24,7 @@ export const googleAuth = async (req, res) => {
       // secure:true,
       sameSite: 'strict',
       // sameSite:"none",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 3 * 24 * 60 * 60 * 1000
     });
 
     return res.status(200).json({
