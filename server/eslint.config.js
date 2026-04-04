@@ -15,7 +15,14 @@ export default defineConfig([
     },
     rules: {
       // optional custom rules
-      'no-unused-vars': ['error', { args: 'after-used', ignoreRestSiblings: true }],
+      'no-unused-vars': ['error', {
+        args: 'after-used',
+        ignoreRestSiblings: true,
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '^_'
+      }],
       'semi': ['error', 'always'],
       'quotes': ['error', 'single']
     },
