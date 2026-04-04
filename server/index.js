@@ -13,23 +13,23 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin:'http://localhost:5173',
-  credentials:true
+  origin: 'http://localhost:5173',
+  credentials: true
 }));
 
-app.use('/api/auth',authRouter);
-app.use('/api/user',userRouterRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter);
 
 const startServer = async () => {
-   try {
-     await dbConnect();
+  try {
+    await dbConnect();
     app.listen(port, () => {
-       console.log(`Server Started at ${port}`);
-     });
-   } catch (error) {
-     console.error('Startup failed:', error.message);
-     process.exit(1);
-   }
- };
- 
+      console.log(`Server Started at ${port}`);
+    });
+  } catch (error) {
+    console.error('Startup failed:', error.message);
+    process.exit(1);
+  }
+};
+
 startServer();

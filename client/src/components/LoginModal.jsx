@@ -15,7 +15,7 @@ const LoginModal = ({ open, onClose }) => {
           email: result.user.email,
           avatar: result.user.photoURL,
         },
-        { WithCredentials: true },
+        { withCredentials: true },
       );
     } catch (error) {
       console.log(error);
