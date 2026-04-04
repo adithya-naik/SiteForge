@@ -1,12 +1,27 @@
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import LoginModal from "../components/LoginModal";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Coins, Plus } from "lucide-react";
+import { setuserData } from "../redux/userSlice";
+import axios from "axios";
+import { serverURL } from "../App";
 const Home = () => {
   const [openLogin, setOpenLogin] = useState(false);
   const { userData } = useSelector((state) => state.user);
-  // console.log(userData);
+  const [openProfile, setOpenProfile] = useState(false);
+  const dispatch = useDispatch();
+  const handleLogout = async () => {
+    try {
+      await axios.get(`${serverURL}/api/auth/logout`, {
+        withCredentials: true,
+      });
+      dispatch(setuserData(null));
+      setOpenProfile(false)
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="relative min-h-screen bg-[#040404] text-white overflow-hidden">
       {/* Navbar */}
@@ -23,7 +38,7 @@ const Home = () => {
               Pricing
             </div>
             {userData && (
-              <div className="flex items-center gap-0.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/50 text-sm cursor-pointer hover:bg-white/10 transition">
+              <div className="hidden md:flex items-center gap-0.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/50 text-sm cursor-pointer hover:bg-white/10 transition">
                 <Coins size={14} className="text-yellow-400" />
                 <span className="text-zinc-300">
                   Credits {userData.credits}
@@ -42,13 +57,58 @@ const Home = () => {
                 Get Started
               </button>
             ) : (
-              <button className="flex items-center">
-                <img
-                  src={userData.avatar}
-                  className="w-9 h-9 rounded-full border border-white/20 object-cover"
-                  alt="Profile Image"
-                />
-              </button>
+              <div className="relative">
+                <button
+                  className="flex items-center"
+                  onClick={() => setOpenProfile(!openProfile)}
+                >
+                  <img
+                    src={userData.avatar}
+                    className="w-9 h-9 rounded-full border border-white/20 object-cover"
+                    alt="Profile Image"
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {openProfile && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-60 z-50 rounded-xl bg-[#0b0b0b] border border-white/10 shadow-2xl overflow-hidden"
+                      >
+                        <div className="px-4 py-3 border-b border-white/10 ">
+                          <p className="text-sm font-medium truncate">
+                            {userData.name}
+                          </p>
+                          <p className="text-xs text-zinc-500 truncate">
+                            {userData.email}
+                          </p>
+                        </div>
+                        <button className="md:hidden w-full px-4 py-3  flex items-center gap-2 text-sm border-b border-white/10 hover:bg-white/5">
+                          <Coins size={14} className="text-yellow-400" />
+                          <span className="text-zinc-300">
+                            Credits {userData.credits}
+                          </span>
+                          <span>
+                            <Plus size={14} />
+                          </span>
+                        </button>
+                        <button className="w-full px-4 py-3 text-left text-sm hover:bg-white/5">
+                          Dashboard
+                        </button>
+                        <button
+                          className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5"
+                          onClick={handleLogout}
+                        >
+                          Logout
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
           </div>
         </div>

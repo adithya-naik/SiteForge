@@ -21,6 +21,8 @@ const LoginModal = ({ open, onClose }) => {
         { withCredentials: true },
       );
       dispatch(setuserData(data));
+      window.location.reload();
+      onClose();
     } catch (error) {
       console.log(error);
     }
