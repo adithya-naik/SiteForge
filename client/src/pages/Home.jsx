@@ -1,12 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
+import LoginModal from "../components/LoginModal";
 
 const Home = () => {
-  const highlights = [
-    "AI Generated Code",
-    "Fully Responsive Layouts",
-    "Production Ready Outputs",
-  ];
+  const [openLogin, setOpenLogin] = useState(false);
 
   return (
     <div className="relative min-h-screen bg-[#040404] text-white overflow-hidden">
@@ -23,7 +20,10 @@ const Home = () => {
             <div className="hidden md:inline text-sm text-zinc-400 hover:text-white cursor-pointer">
               Pricing
             </div>
-            <button className="px-4 py-2 rounded-lg border border-white/20 hover:bg-white/10 text-sm cursor-pointer">
+            <button
+              className="px-4 py-2 rounded-lg border border-white/20 hover:bg-white/10 text-sm cursor-pointer"
+              onClick={() => setOpenLogin(true)}
+            >
               Get Started
             </button>
           </div>
@@ -52,7 +52,10 @@ const Home = () => {
           modern,response,production-ready,auto-deployable website
         </motion.p>
 
-        <button className="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold hover:scale-105 transition cursor-pointer">
+        <button
+          className="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold hover:scale-105 transition cursor-pointer"
+          onClick={() => setOpenLogin(true)}
+        >
           Get Started
         </button>
       </section>
@@ -60,6 +63,10 @@ const Home = () => {
       <footer className="border border-white/10 py-4 flex items-center justify-center text-sm text-zinc-500">
         &copy; {new Date().getFullYear()} SiteForage
       </footer>
+
+      {openLogin && (
+        <LoginModal open={openLogin} onClose={() => setOpenLogin(false)} />
+      )}
     </div>
   );
 };
