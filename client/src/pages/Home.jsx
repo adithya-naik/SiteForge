@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import LoginModal from "../components/LoginModal";
-
+import { useSelector } from "react-redux";
+import { Coins, Plus } from "lucide-react";
 const Home = () => {
   const [openLogin, setOpenLogin] = useState(false);
-
+  const { userData } = useSelector((state) => state.user);
+  // console.log(userData);
   return (
     <div className="relative min-h-screen bg-[#040404] text-white overflow-hidden">
       {/* Navbar */}
@@ -20,12 +22,34 @@ const Home = () => {
             <div className="hidden md:inline text-sm text-zinc-400 hover:text-white cursor-pointer">
               Pricing
             </div>
-            <button
-              className="px-4 py-2 rounded-lg border border-white/20 hover:bg-white/10 text-sm cursor-pointer"
-              onClick={() => setOpenLogin(true)}
-            >
-              Get Started
-            </button>
+            {userData && (
+              <div className="flex items-center gap-0.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/50 text-sm cursor-pointer hover:bg-white/10 transition">
+                <Coins size={14} className="text-yellow-400" />
+                <span className="text-zinc-300">
+                  Credits {userData.credits}
+                </span>
+                <span>
+                  <Plus size={14} />
+                </span>
+              </div>
+            )}
+
+            {!userData ? (
+              <button
+                className="px-4 py-2 rounded-lg border border-white/20 hover:bg-white/10 text-sm cursor-pointer"
+                onClick={() => setOpenLogin(true)}
+              >
+                Get Started
+              </button>
+            ) : (
+              <button className="flex items-center">
+                <img
+                  src={userData.avatar}
+                  className="w-9 h-9 rounded-full border border-white/20 object-cover"
+                  alt="Profile Image"
+                />
+              </button>
+            )}
           </div>
         </div>
       </motion.div>
