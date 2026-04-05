@@ -1,8 +1,10 @@
 const openRouterURL = "https://openrouter.ai/api/v1/chat/completions"
-
 const model = "deepseek/deepseek-chat"
+import dotenv from 'dotenv'
+dotenv.config()
+console.log("API KEY :", process.env.OPEN_ROUTER_API_KEY)
 
-const generateResponse = async (prompt) => {
+export const generateResponse = async (prompt, retryInstruction = "") => {
   const response = await fetch(openRouterURL, {
     method: 'POST',
     headers: {
@@ -10,26 +12,31 @@ const generateResponse = async (prompt) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: model,
+      model,
       messages: [
         {
           role: "system",
-          content: "You must return only valid raw JSON"
+          content: "You must return only valid raw JSON. No markdown. No backticks. No explanations."
         },
         {
           role: 'user',
-          content: prompt,
+          content: retryInstruction ? prompt + "\n\n" + retryInstruction : prompt,
         },
       ],
-      temparature: 0.2
+      temperature: 0.2
     }),
   });
 
+  const data = await response.json()
+
   if (!response.ok) {
-    const error = await res.text()
-    throw new Error("Open Router + err")
+    throw new Error(`OpenRouter API error ${response.status}: ${JSON.stringify(data)}`)
   }
 
-  const data = await res.json()
-  return data;
+  const content = data.choices?.[0]?.message?.content
+  if (!content) {
+    throw new Error(`Empty content from model. Full response: ${JSON.stringify(data)}`)
+  }
+
+  return content
 }
