@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { serverURL } from "../App";
-import { Code2, Monitor, Rocket } from "lucide-react";
+import { Code2, Monitor, Rocket, Send } from "lucide-react";
 import { useRef } from "react";
 
 const Editor = () => {
@@ -27,7 +27,7 @@ const Editor = () => {
   }, [id]);
 
   useEffect(() => {
-if (!iframeRef.current || !website || !website.latestCode) return;
+    if (!iframeRef.current || !website || !website.latestCode) return;
     const blob = new Blob([website.latestCode], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     iframeRef.current.src = url;
@@ -53,7 +53,7 @@ if (!iframeRef.current || !website || !website.latestCode) return;
 
   return (
     <div className="h-screen w-screen flex bg-black text-white overflow-hidden">
-      <aside>
+      <aside className="hidden lg:flex w-[380px] flex-col border-r border-white/10 bg-black/80">
         <Header></Header>
         <Chat></Chat>
       </aside>
@@ -87,8 +87,10 @@ if (!iframeRef.current || !website || !website.latestCode) return;
     );
   }
 
-  function Chat() {
-    return (
+function Chat() {
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Messages - scrollable */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {website.conversation.map((msg, i) => (
           <div
@@ -109,7 +111,22 @@ if (!iframeRef.current || !website || !website.latestCode) return;
           </div>
         ))}
       </div>
-    );
-  }
+
+      {/* Input - always pinned to bottom */}
+      <div className="p-3 border-t border-white/10 shrink-0">
+        <div className="flex gap-2">
+          <textarea
+            rows="1"
+            placeholder="Describe changes ...."
+            className="flex-1 resize-none rounded-2xl px-4 py-3 bg-white/5 border border-white/10 text-sm outline-none"
+          ></textarea>
+          <button className="px-4 py-3 rounded-2xl bg-white text-black">
+            <Send size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 };
 export default Editor;
