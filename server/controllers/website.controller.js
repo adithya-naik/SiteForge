@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import Website from "../models/website.model.js";
 import extractJson from "../utils/extractJson.js";
 
-const CREDIT_COST = 50
+const WEBSITE_GEN_CREDIT_COST = 50;
 
 const masterPrompt = `
 YOU ARE A PRINCIPAL FRONTEND ARCHITECT
@@ -29,7 +29,7 @@ USER REQUIREMENT:
 
 GLOBAL QUALITY BAR (NON-NEGOTIABLE)
 --------------------------------------------------
-- Premium, modern UI (2026-2027)
+- Premium, modern UI (2026–2027)
 - Professional typography & spacing
 - Clean visual hierarchy
 - Business-ready content (NO lorem ipsum)
@@ -47,7 +47,7 @@ YOU MUST IMPLEMENT:
 ✔ Mobile-first CSS approach
 ✔ Responsive layout for:
   - Mobile (<768px)
-  - Tablet (768px-1024px)
+  - Tablet (768px–1024px)
   - Desktop (>1024px)
 
 ✔ Use:
@@ -92,7 +92,6 @@ TECHNICAL RULES (VERY IMPORTANT)
 - No page reloads
 - No dead UI
 - No broken buttons
-
 --------------------------------------------------
 SPA VISIBILITY RULE (MANDATORY)
 --------------------------------------------------
@@ -101,6 +100,7 @@ SPA VISIBILITY RULE (MANDATORY)
   then .page.active { display: block } is REQUIRED
 - At least ONE page MUST be visible on initial load
 - Hiding all content is INVALID
+
 
 --------------------------------------------------
 REQUIRED SPA PAGES
@@ -135,20 +135,12 @@ BEFORE RESPONDING, ENSURE:
 IF ANY CHECK FAILS → RESPONSE IS INVALID
 
 --------------------------------------------------
-OUTPUT FORMAT (STRICT - RAW JSON ONLY)
+OUTPUT FORMAT (RAW JSON ONLY)
 --------------------------------------------------
-Return exactly this structure with no extra text:
 {
   "message": "Short professional confirmation sentence",
   "code": "<FULL VALID HTML DOCUMENT>"
 }
-
-CRITICAL JSON RULES:
-- Escape ALL double quotes inside HTML as \"
-- Escape ALL backslashes as \\
-- Replace ALL newlines inside the code string with \n
-- The entire response must be parseable by JSON.parse()
-- NO markdown, NO backticks, NO extra text outside the JSON
 
 --------------------------------------------------
 ABSOLUTE RULES
@@ -156,9 +148,11 @@ ABSOLUTE RULES
 - RETURN RAW JSON ONLY
 - NO markdown
 - NO explanations
-- NO extra text outside JSON
+- NO extra text
 - FORMAT MUST MATCH EXACTLY
-`
+- IF FORMAT IS BROKEN → RESPONSE IS INVALID
+`;
+
 
 export const generateWebsite = async (req, res) => {
   try {
@@ -173,9 +167,9 @@ export const generateWebsite = async (req, res) => {
       return res.status(404).json({ message: "User not found" })
     }
 
-    if (user.credits < CREDIT_COST) {
+    if (user.credits < WEBSITE_GEN_CREDIT_COST) {
       return res.status(400).json({
-        message: `Insufficient credits. You need ${CREDIT_COST} credits to generate a website.`
+        message: `Insufficient credits. You need ${WEBSITE_GEN_CREDIT_COST} credits to generate a website.`
       })
     }
 
@@ -221,7 +215,7 @@ export const generateWebsite = async (req, res) => {
       ]
     })
 
-    user.credits -= CREDIT_COST
+    user.credits -= WEBSITE_GEN_CREDIT_COST
     await user.save()
 
     return res.status(201).json({
@@ -234,6 +228,28 @@ export const generateWebsite = async (req, res) => {
     console.error("generateWebsite error:", error)
     return res.status(500).json({
       message: "Internal server error during website generation."
+    })
+  }
+}
+
+export const getWebsiteById = async (req, res) => {
+  try {
+    const website = await Website.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    })
+
+    if (!website) {
+      return res.status(400).json({
+        message: "Website not found"
+      })
+    }
+
+    return res.status(200).json(website);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: `getWebsiteById error : ${error}`
     })
   }
 }

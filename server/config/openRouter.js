@@ -2,7 +2,7 @@ const openRouterURL = "https://openrouter.ai/api/v1/chat/completions"
 const model = "deepseek/deepseek-chat"
 import dotenv from 'dotenv'
 dotenv.config()
-console.log("API KEY :", process.env.OPEN_ROUTER_API_KEY)
+// console.log("API KEY :", process.env.OPEN_ROUTER_API_KEY)
 
 export const generateResponse = async (prompt, retryInstruction = "") => {
   const response = await fetch(openRouterURL, {
