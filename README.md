@@ -2,7 +2,7 @@
 
 > A full-stack MERN application with automated linting, CI/CD via GitHub Actions, and AI-assisted code review through CodeRabbit.
 
-[![CI](https://github.com/<your-username>/SiteForge/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/SiteForge/actions/workflows/ci.yml)
+[![CI](https://github.com/adithya-naik/SiteForge/actions/workflows/ci.yml/badge.svg)](https://github.com/adithya-naik/SiteForge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
