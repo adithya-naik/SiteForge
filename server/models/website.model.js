@@ -3,25 +3,25 @@ import mongoose from 'mongoose';
 const messageSchema = new mongoose.Schema({
   role: {
     type: String,
-    enum: ["ai", "user"],
+    enum: ['ai', 'user'],
     required: true
   },
   content: {
     type: String,
     required: true
   }
-}, { timestamps: true })
+}, { timestamps: true });
 
 
 const websiteSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true
   },
   title: {
     type: String,
-    default: "Untitiled website"
+    default: 'Untitiled website'
   },
   latestCode: {
     type: String,

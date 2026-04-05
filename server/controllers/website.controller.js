@@ -1,7 +1,7 @@
-import { generateResponse } from "../config/openRouter.js";
-import User from "../models/user.model.js";
-import Website from "../models/website.model.js";
-import extractJson from "../utils/extractJson.js";
+import { generateResponse } from '../config/openRouter.js';
+import User from '../models/user.model.js';
+import Website from '../models/website.model.js';
+import extractJson from '../utils/extractJson.js';
 
 const WEBSITE_GEN_CREDIT_COST = 50;
 
@@ -156,33 +156,33 @@ ABSOLUTE RULES
 
 export const generateWebsite = async (req, res) => {
   try {
-    const { prompt } = req.body
+    const { prompt } = req.body;
 
     if (!prompt?.trim()) {
-      return res.status(400).json({ message: "Prompt is required" })
+      return res.status(400).json({ message: 'Prompt is required' });
     }
 
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(404).json({ message: 'User not found' });
     }
 
     if (user.credits < WEBSITE_GEN_CREDIT_COST) {
       return res.status(400).json({
         message: `Insufficient credits. You need ${WEBSITE_GEN_CREDIT_COST} credits to generate a website.`
-      })
+      });
     }
 
-    const finalPrompt = masterPrompt.replace("{USER_PROMPT}", prompt)
-    let raw = ""
-    let parsed = null
+    const finalPrompt = masterPrompt.replace('{USER_PROMPT}', prompt);
+    let raw = '';
+    let parsed = null;
 
     // attempt 1 — normal prompt
     try {
-      raw = await generateResponse(finalPrompt)
-      parsed = extractJson(raw)
+      raw = await generateResponse(finalPrompt);
+      parsed = extractJson(raw);
     } catch (e) {
-      console.error("Attempt 1 failed:", e.message)
+      console.error('Attempt 1 failed:', e.message);
     }
 
     // attempt 2 — stricter retry if first failed
@@ -190,19 +190,19 @@ export const generateWebsite = async (req, res) => {
       try {
         raw = await generateResponse(
           finalPrompt,
-          "IMPORTANT: Your previous response was invalid. Return ONLY raw JSON. No markdown. No backticks. Escape all quotes inside the code field."
-        )
-        parsed = extractJson(raw)
+          'IMPORTANT: Your previous response was invalid. Return ONLY raw JSON. No markdown. No backticks. Escape all quotes inside the code field.'
+        );
+        parsed = extractJson(raw);
       } catch (e) {
-        console.error("Attempt 2 failed:", e.message)
+        console.error('Attempt 2 failed:', e.message);
       }
     }
 
     if (!parsed?.code) {
-      console.error("AI returned invalid response after 2 attempts. Raw:", raw?.slice(0, 500))
+      console.error('AI returned invalid response after 2 attempts. Raw:', raw?.slice(0, 500));
       return res.status(400).json({
-        message: "AI returned an invalid response. Please try again."
-      })
+        message: 'AI returned an invalid response. Please try again.'
+      });
     }
 
     const website = await Website.create({
@@ -210,39 +210,39 @@ export const generateWebsite = async (req, res) => {
       title: prompt.trim().slice(0, 60),
       latestCode: parsed.code,
       conversation: [
-        { role: "user", content: prompt },
-        { role: "ai", content: parsed.message }
+        { role: 'user', content: prompt },
+        { role: 'ai', content: parsed.message }
       ]
-    })
+    });
 
-    user.credits -= WEBSITE_GEN_CREDIT_COST
-    await user.save()
+    user.credits -= WEBSITE_GEN_CREDIT_COST;
+    await user.save();
 
     return res.status(201).json({
       websiteId: website._id,
       message: parsed.message,
       remainingCredits: user.credits
-    })
+    });
 
   } catch (error) {
-    console.error("generateWebsite error:", error)
+    console.error('generateWebsite error:', error);
     return res.status(500).json({
-      message: "Internal server error during website generation."
-    })
+      message: 'Internal server error during website generation.'
+    });
   }
-}
+};
 
 export const getWebsiteById = async (req, res) => {
   try {
     const website = await Website.findOne({
       _id: req.params.id,
       user: req.user._id
-    })
+    });
 
     if (!website) {
       return res.status(400).json({
-        message: "Website not found"
-      })
+        message: 'Website not found'
+      });
     }
 
     return res.status(200).json(website);
@@ -250,6 +250,6 @@ export const getWebsiteById = async (req, res) => {
   } catch (error) {
     return res.status(400).json({
       message: `getWebsiteById error : ${error}`
-    })
+    });
   }
-}
+};
