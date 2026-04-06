@@ -1,0 +1,193 @@
+name: Create Issues
+on:
+  workflow_dispatch:
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create all issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue create --repo $REPO --title "App.jsx: Remove unused Navigate import" --body "**Location:** \`client/src/App.jsx\`, line 2
+
+          **Problem:**
+          Navigate is imported but never used, triggering a SonarCloud warning.
+
+          **Fix:**
+          \`\`\`jsx
+          import { BrowserRouter, Route, Routes } from 'react-router-dom';
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "App.jsx: Protected routes render Home silently instead of redirecting to /" --body "**Location:** \`client/src/App.jsx\`, lines 20-31
+
+          **Problem:**
+          When userData is falsy, protected routes render Home without changing the URL.
+
+          **Fix:**
+          \`\`\`jsx
+          element={userData ? <Dashboard /> : <Navigate to='/' replace />}
+          \`\`\`
+          Apply same to Generate and Editor routes."
+
+          gh issue create --repo $REPO --title "Dashboard.jsx: Icon-only back button missing accessible name" --body "**Location:** \`client/src/pages/Dashboard.jsx\`, lines 15-17
+
+          **Problem:**
+          Back button has no aria-label so screen readers cannot announce its purpose.
+
+          **Fix:**
+          \`\`\`jsx
+          <button aria-label='Go back to home' className='p-2 rounded-lg hover:bg-white/10 transition' onClick={() => navigate('/')}>
+            <ArrowLeft size={16} />
+          </button>
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "Editor.jsx: catch block passes undefined to setError on network failure" --body "**Location:** \`client/src/pages/Editor.jsx\`, lines 21-23
+
+          **Problem:**
+          When err.response is undefined, setError(undefined) leaves the UI in a perpetual loading state.
+
+          **Fix:**
+          \`\`\`js
+          setError(err.response?.data?.message ?? 'Failed to load this website preview.');
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "Editor.jsx: Preview iframe loads untrusted AI HTML without sandbox restrictions" --body "**Location:** \`client/src/pages/Editor.jsx\`, lines 29-35
+
+          **Problem:**
+          website.latestCode is untrusted AI-generated HTML. Without sandbox, the iframe inherits the app origin and can access window.parent or same-origin APIs.
+
+          **Fix:**
+          \`\`\`jsx
+          <iframe
+            ref={iframeRef}
+            title='Live preview'
+            sandbox='allow-scripts allow-forms'
+            className='flex-1 w-full bg-white'
+          />
+          \`\`\`
+          Apply same hardening to the second iframe. Do not add allow-same-origin."
+
+          gh issue create --repo $REPO --title "Generate.jsx: Missing lifecycle state, duplicate guard, a11y, typo, and navigation on success" --body "**Location:** \`client/src/pages/Generate.jsx\`, lines 10-23
+
+          **Problems:**
+          - No isGenerating state — duplicate submissions possible
+          - Errors only console.log'd, never shown to user
+          - Clickable motion.div is inaccessible to keyboard users
+          - Typo: whileTap={{ sclae: 0.96 }} should be scale
+          - websiteId returned but user never navigated to editor
+
+          **Fix:**
+          \`\`\`jsx
+          const [isGenerating, setIsGenerating] = useState(false);
+          const [error, setError] = useState('');
+
+          const handleGenerateWebsite = async () => {
+            if (isGenerating || !prompt.trim()) return;
+            setIsGenerating(true);
+            try {
+              const { data } = await axios.post(...);
+              navigate('/editor/' + data.websiteId);
+            } catch (err) {
+              setError(err.response?.data?.message ?? 'Failed to generate.');
+            } finally {
+              setIsGenerating(false);
+            }
+          };
+          \`\`\`
+          Replace motion.div with motion.button and fix the sclae typo."
+
+          gh issue create --repo $REPO --title "openRouter.js: Leaks provider payload in errors; missing API key validation and request timeout" --body "**Location:** \`server/config/openRouter.js\`, lines 8-38
+
+          **Problems:**
+          - JSON.stringify(data) in thrown errors can leak sensitive content
+          - No pre-validation of OPEN_ROUTER_API_KEY before making request
+          - No timeout — stalled provider hangs the server
+
+          **Fix:**
+          \`\`\`js
+          if (!process.env.OPEN_ROUTER_API_KEY) throw new Error('OPEN_ROUTER_API_KEY is not configured');
+
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 15000);
+          try {
+            const response = await fetch(url, { signal: controller.signal });
+          } finally {
+            clearTimeout(timeout);
+          }
+
+          throw new Error('OpenRouter error ' + response.status + ': ' + (data.error?.message ?? 'Unknown'));
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "website.controller.js: getWebsiteById catch block leaks raw error to client" --body "**Location:** \`server/controllers/website.controller.js\`, lines 250-253
+
+          **Problem:**
+          catch block returns the raw error string to the client, exposing internal details.
+
+          **Fix:**
+          \`\`\`js
+          console.error('getWebsiteById error:', error);
+          res.status(400).json({ message: 'Unable to retrieve website.' });
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "website.controller.js: Credit deduction and website creation are non-atomic" --body "**Location:** \`server/controllers/website.controller.js\`, lines 165-219
+
+          **Problem:**
+          Credits are deducted separately from Website.create(). If creation fails after deduction, user loses credits with nothing created.
+
+          **Fix:**
+          Use a conditional atomic update before any DB writes:
+          \`\`\`js
+          const updated = await User.findOneAndUpdate(
+            { _id: req.user._id, credits: { \$gte: WEBSITE_GEN_CREDIT_COST } },
+            { \$inc: { credits: -WEBSITE_GEN_CREDIT_COST } },
+            { new: true }
+          );
+          if (!updated) return res.status(400).json({ message: 'Insufficient credits' });
+          const website = await Website.create({ ... });
+          \`\`\`
+          Run generateResponse and extractJson before any DB writes."
+
+          gh issue create --repo $REPO --title "isAuth.js: Missing auth token returns 400 instead of 401" --body "**Location:** \`server/middlewares/isAuth.js\`, lines 7-9
+
+          **Problem:**
+          Missing token responds with 400 Bad Request. Correct status is 401 Unauthorized.
+
+          **Fix:**
+          \`\`\`js
+          return res.status(401).json({ message: 'Unauthorized' });
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "website.model.js: Typo in title default — Untitiled should be Untitled" --body "**Location:** \`server/models/website.model.js\`, line 24
+
+          **Problem:**
+          Default value is set to 'Untitiled website'.
+
+          **Fix:**
+          \`\`\`js
+          default: 'Untitled website'
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "website.model.js: slug field missing sparse:true causes uniqueness errors on null values" --body "**Location:** \`server/models/website.model.js\`, lines 40-43
+
+          **Problem:**
+          slug has unique:true but is optional. MongoDB treats multiple null values as duplicates.
+
+          **Fix:**
+          \`\`\`js
+          slug: { type: String, unique: true, sparse: true }
+          \`\`\`"
+
+          gh issue create --repo $REPO --title "extractJson.js: Fallback code field extraction fails on escaped quotes or trailing fields" --body "**Location:** \`server/utils/extractJson.js\`, lines 23-39
+
+          **Problem:**
+          lastIndexOf('\"') on innerContent picks the wrong closing quote when the value has escaped quotes or later fields exist.
+
+          **Fix:**
+          \`\`\`js
+          const match = raw.match(/\"code\"\s*:\s*\"((?:\\.|[^\"\\])*)\"/);
+          const code = match ? JSON.parse('\"' + match[1] + '\"') : null;
+          \`\`\`
+          Return null on malformed input."
