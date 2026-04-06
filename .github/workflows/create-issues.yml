@@ -2,6 +2,9 @@ name: Create Issues
 on:
   workflow_dispatch:
 
+permissions:
+  issues: write
+
 jobs:
   create-issues:
     runs-on: ubuntu-latest
@@ -138,7 +141,6 @@ jobs:
           Credits are deducted separately from Website.create(). If creation fails after deduction, user loses credits with nothing created.
 
           **Fix:**
-          Use a conditional atomic update before any DB writes:
           \`\`\`js
           const updated = await User.findOneAndUpdate(
             { _id: req.user._id, credits: { \$gte: WEBSITE_GEN_CREDIT_COST } },
