@@ -21,7 +21,7 @@ const websiteSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    default: 'Untitiled website'
+    default: 'Untitled website'
   },
   latestCode: {
     type: String,
