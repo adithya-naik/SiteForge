@@ -22,7 +22,7 @@ const useGetCurrentUser = () => {
     };
 
     getCurrentUser();
-  }, []);
+  }, [dispatch]);
 };
 
 export default useGetCurrentUser;

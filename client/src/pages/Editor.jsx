@@ -9,7 +9,28 @@ const Editor = () => {
   const { id } = useParams();
   const [website, setWebsite] = useState(null);
   const [error, setError] = useState("");
+  const [code, setCode] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [prompt, setPrompt] = useState("");
   const iframeRef = useRef(null);
+
+  const handleUpdate = async () => {
+    setMessages((m) => [...m, { role: "user", content: prompt }]);
+    try {
+      const result = await axios.post(
+        `${serverURL}/api/website/update/${id}`,
+        { prompt },
+        { withCredentials: true },
+      );
+
+      console.log(result);
+      setMessages((m) => [...m, { role: "ai", content: result.data.message }]);
+      setCode(result.data.code);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const handlegetWebsite = async () => {
       try {
@@ -18,6 +39,8 @@ const Editor = () => {
           { withCredentials: true },
         );
         setWebsite(result.data);
+        setCode(result.data.latestCode);
+        setMessages(result.data.conversation);
       } catch (err) {
         setError(err.response?.data?.message);
       }
@@ -27,13 +50,13 @@ const Editor = () => {
   }, [id]);
 
   useEffect(() => {
-    if (!iframeRef.current || !website || !website.latestCode) return;
-    const blob = new Blob([website.latestCode], { type: "text/html" });
+    if (!iframeRef.current || !code) return;
+    const blob = new Blob([code], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     iframeRef.current.src = url;
 
     return () => URL.revokeObjectURL(url);
-  }, [website]);
+  }, [code]);
 
   if (error) {
     return (
@@ -55,7 +78,49 @@ const Editor = () => {
     <div className="h-screen w-screen flex bg-black text-white overflow-hidden">
       <aside className="hidden lg:flex w-[380px] flex-col border-r border-white/10 bg-black/80">
         <Header></Header>
-        <Chat></Chat>
+
+        {/* Chat */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Messages - scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`max-w-[85%] ${
+                msg.role === "user" ? "ml-auto" : "mr-auto"
+              }`}
+            >
+              <div
+                className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  msg.role === "user"
+                    ? "bg-white text-black"
+                    : "bg-white/5 border border-white/10 text-zinc-200"
+                }`}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Input - always pinned to bottom */}
+        <div className="p-3 border-t border-white/10 shrink-0">
+          <div className="flex gap-2">
+            <input
+              placeholder="Describe changes ...."
+              className="flex-1 resize-none rounded-2xl px-4 py-3 bg-white/5 border border-white/10 text-sm outline-none"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <button
+              className="px-4 py-3 rounded-2xl bg-white text-black"
+              onClick={handleUpdate}
+            >
+              <Send size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
@@ -86,47 +151,5 @@ const Editor = () => {
       </div>
     );
   }
-
-function Chat() {
-  return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Messages - scrollable */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {website.conversation.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-[85%] ${
-              msg.role === "user" ? "ml-auto" : "mr-auto"
-            }`}
-          >
-            <div
-              className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-white text-black"
-                  : "bg-white/5 border border-white/10 text-zinc-200"
-              }`}
-            >
-              {msg.content}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Input - always pinned to bottom */}
-      <div className="p-3 border-t border-white/10 shrink-0">
-        <div className="flex gap-2">
-          <textarea
-            rows="1"
-            placeholder="Describe changes ...."
-            className="flex-1 resize-none rounded-2xl px-4 py-3 bg-white/5 border border-white/10 text-sm outline-none"
-          ></textarea>
-          <button className="px-4 py-3 rounded-2xl bg-white text-black">
-            <Send size={14} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 };
 export default Editor;

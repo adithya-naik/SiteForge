@@ -4,6 +4,7 @@ import Website from '../models/website.model.js';
 import extractJson from '../utils/extractJson.js';
 
 const WEBSITE_GEN_CREDIT_COST = 50;
+const WEBSITE_CNG_CREDIT_COST = 25;
 
 const masterPrompt = `
 YOU ARE A PRINCIPAL FRONTEND ARCHITECT
@@ -250,6 +251,135 @@ export const getWebsiteById = async (req, res) => {
   } catch (error) {
     return res.status(400).json({
       message: `getWebsiteById error : ${error}`
+    });
+  }
+};
+
+export const changes = async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt?.trim()) {
+      return res.status(400).json({ message: 'Prompt is required' });
+    }
+
+    const website = await Website.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!website) {
+      return res.status(400).json({
+        message: 'Website not found'
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.credits < WEBSITE_CNG_CREDIT_COST) {
+      return res.status(400).json({
+        message: `Insufficient credits. You need ${WEBSITE_CNG_CREDIT_COST} credits to modify a website.`
+      });
+    }
+
+    const updatePrompt = `
+    UPDATE THIS HTML WEBSITE.
+    
+    CURRENT CODE :
+    ${website.latestCode}
+    
+    USER REQUEST:
+    ${prompt}
+    
+    RETURN RAW JSON ONLY:
+    {
+    "message":"Short Confirmation",
+    "code":"<UPDATED FULL HTML>"
+    }
+    `;
+
+
+    let raw = '';
+    let parsed = null;
+
+    // attempt 1 — normal prompt
+    try {
+      raw = await generateResponse(updatePrompt);
+      parsed = extractJson(raw);
+    } catch (e) {
+      console.error('Attempt 1 failed:', e.message);
+    }
+
+    // attempt 2 — stricter retry if first failed
+    if (!parsed?.code) {
+      try {
+        raw = await generateResponse(
+          updatePrompt,
+          'IMPORTANT: Your previous response was invalid. Return ONLY raw JSON. No markdown. No backticks. Escape all quotes inside the code field.'
+        );
+        parsed = extractJson(raw);
+      } catch (e) {
+        console.error('Attempt 2 failed:', e.message);
+      }
+    }
+
+    if (!parsed?.code) {
+      console.error('AI returned invalid response after 2 attempts. Raw:', raw?.slice(0, 500));
+      return res.status(400).json({
+        message: 'AI returned an invalid response. Please try again.'
+      });
+    }
+
+    website.conversation.push(
+      {
+        role: 'ai', content: parsed.message
+      },
+      {
+        role: 'user', content: prompt
+      }
+    );
+
+    website.latestCode = parsed.code;
+
+    website.save();
+
+    user.credits -= WEBSITE_CNG_CREDIT_COST;
+    await user.save();
+
+    return res.status(200).json({
+      message: parsed.message,
+      code: parsed.code,
+      remainingCredits: user.credits
+    });
+
+  } catch (error) {
+    console.error('updateWebsite error:', error);
+    return res.status(500).json({
+      message: 'Internal server error during website generation.'
+    });
+  }
+};
+
+export const getAllWebsites = async (req, res) => {
+  try {
+    const websites = await Website.find({
+      user: req.user._id
+    });
+
+    if (!websites) {
+      return res.status(400).json({
+        message: 'Websites not found'
+      });
+    }
+
+    return res.status(200).json(websites);
+
+  } catch (error) {
+    return res.status(400).json({
+      message: `getAllWebsites error : ${error}`
     });
   }
 };
