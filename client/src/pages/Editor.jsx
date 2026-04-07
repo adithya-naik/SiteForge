@@ -51,7 +51,31 @@ const Editor = () => {
 
   useEffect(() => {
     if (!iframeRef.current || !code) return;
-    const blob = new Blob([code], { type: "text/html" });
+
+    const fixCode = (html) => {
+      // Extract all script tags (with or without attributes)
+      const scriptRegex = /<script(\s[^>]*)?>[\s\S]*?<\/script>/gi;
+      const scripts = [];
+      const stripped = html.replace(scriptRegex, (match) => {
+        // Don't move external scripts with src, keep them in place
+        if (/src\s*=/i.test(match)) return match;
+        scripts.push(match);
+        return "";
+      });
+
+      // Inject inline scripts just before </body> so DOM is ready
+      const injected = stripped.replace(
+        /<\/body>/i,
+        `${scripts.join("\n")}</body>`,
+      );
+
+      // If no </body> tag, just append
+      return injected.includes("</body>")
+        ? injected
+        : stripped + scripts.join("\n");
+    };
+
+    const blob = new Blob([fixCode(code)], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     iframeRef.current.src = url;
 
@@ -80,47 +104,47 @@ const Editor = () => {
         <Header></Header>
 
         {/* Chat */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Messages - scrollable */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`max-w-[85%] ${
-                msg.role === "user" ? "ml-auto" : "mr-auto"
-              }`}
-            >
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Messages - scrollable */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            {messages.map((msg, i) => (
               <div
-                className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-white text-black"
-                    : "bg-white/5 border border-white/10 text-zinc-200"
+                key={i}
+                className={`max-w-[85%] ${
+                  msg.role === "user" ? "ml-auto" : "mr-auto"
                 }`}
               >
-                {msg.content}
+                <div
+                  className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-white text-black"
+                      : "bg-white/5 border border-white/10 text-zinc-200"
+                  }`}
+                >
+                  {msg.content}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Input - always pinned to bottom */}
-        <div className="p-3 border-t border-white/10 shrink-0">
-          <div className="flex gap-2">
-            <input
-              placeholder="Describe changes ...."
-              className="flex-1 resize-none rounded-2xl px-4 py-3 bg-white/5 border border-white/10 text-sm outline-none"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <button
-              className="px-4 py-3 rounded-2xl bg-white text-black"
-              onClick={handleUpdate}
-            >
-              <Send size={14} />
-            </button>
+          {/* Input - always pinned to bottom */}
+          <div className="p-3 border-t border-white/10 shrink-0">
+            <div className="flex gap-2">
+              <input
+                placeholder="Describe changes ...."
+                className="flex-1 resize-none rounded-2xl px-4 py-3 bg-white/5 border border-white/10 text-sm outline-none"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              <button
+                className="px-4 py-3 rounded-2xl bg-white text-black"
+                onClick={handleUpdate}
+              >
+                <Send size={14} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
