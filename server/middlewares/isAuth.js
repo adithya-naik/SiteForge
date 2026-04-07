@@ -4,8 +4,8 @@ const isAuth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) {
-      return res.status(400).json({
-        message: 'Token not found'
+      return res.status(401).json({
+        message: 'Unauthorized'
       });
     }
 
@@ -14,7 +14,7 @@ const isAuth = async (req, res, next) => {
     next();
 
   } catch (_error) {
-return res.status(500).json({
+    return res.status(401).json({
         message: 'Invalid Token'
       });
   }

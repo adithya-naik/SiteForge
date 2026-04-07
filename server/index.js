@@ -1,11 +1,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
-dotenv.config();
 import dbConnect from './config/db.js';
 import authRouter from './routes/auth.route.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import userRouter from './routes/user.route.js';
+import websiteRouter from './routes/website.route.js';
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use(cors({
 
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
+app.use('/api/website', websiteRouter);
 
 const startServer = async () => {
   try {

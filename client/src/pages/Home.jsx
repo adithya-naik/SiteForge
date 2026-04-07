@@ -6,18 +6,20 @@ import { Coins, Plus } from "lucide-react";
 import { setuserData } from "../redux/userSlice";
 import axios from "axios";
 import { serverURL } from "../App";
+import { useNavigate } from "react-router-dom";
 const Home = () => {
   const [openLogin, setOpenLogin] = useState(false);
   const { userData } = useSelector((state) => state.user);
   const [openProfile, setOpenProfile] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleLogout = async () => {
     try {
       await axios.get(`${serverURL}/api/auth/logout`, {
         withCredentials: true,
       });
       dispatch(setuserData(null));
-      setOpenProfile(false)
+      setOpenProfile(false);
     } catch (error) {
       console.log(error);
     }
@@ -95,7 +97,10 @@ const Home = () => {
                             <Plus size={14} />
                           </span>
                         </button>
-                        <button className="w-full px-4 py-3 text-left text-sm hover:bg-white/5">
+                        <button
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-white/5"
+                          onClick={() => navigate("/dashboard")}
+                        >
                           Dashboard
                         </button>
                         <button
@@ -137,10 +142,16 @@ const Home = () => {
         </motion.p>
 
         <button
-          className="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold hover:scale-105 transition cursor-pointer"
-          onClick={() => setOpenLogin(true)}
+          className="px-10 py-4 rounded-xl bg-white text-black font-semibold hover:scale-105 transition cursor-pointer mt-12"
+          onClick={() => {
+            if (userData) {
+              navigate("/dashboard");
+            } else {
+              setOpenLogin(true);
+            }
+          }}
         >
-          Get Started
+          {userData ? "Go to Dashboard" : "Get Started"}
         </button>
       </section>
 
