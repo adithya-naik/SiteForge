@@ -29,7 +29,7 @@ const extractJson = (text) => {
       const afterCodeKey = text.slice(codeStart + 6); // skip past "code"
       const colonIdx = afterCodeKey.indexOf(':');
       const afterColon = afterCodeKey.slice(colonIdx + 1).trimStart();
-      
+
       if (!afterColon.startsWith('"')) return null;
 
       // everything between first and last quote
