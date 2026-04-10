@@ -13,7 +13,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.2.2",
-    "axios": "^1.14.0",
+    "axios": "^1.15.0",
     "firebase": "^12.11.0",
     "lucide-react": "^1.7.0",
     "motion": "^12.38.0",
