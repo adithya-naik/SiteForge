@@ -26,15 +26,14 @@ const useGetCurrentUser = () => {
     // 1. Run on initial load
     getCurrentUser();
 
-    // 2. Listen for a custom 'auth-change' event 
-    // This allows the login page to "tell" this hook to refresh
+    // 2. Listen for a custom 'auth-change' event dispatched after Google login.
+    //    This triggers a re-fetch instead of a hard page reload.
     window.addEventListener("auth-change", getCurrentUser);
 
-    // 3. Cleanup the listener
+    // 3. Cleanup the listener on unmount to prevent memory leaks
     return () => {
       window.removeEventListener("auth-change", getCurrentUser);
     };
-  }, [dispatch]); // Added dispatch to dependency array for best practice
   }, [dispatch]);
 };
 
