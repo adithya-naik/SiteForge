@@ -35,6 +35,7 @@ const useGetCurrentUser = () => {
       window.removeEventListener("auth-change", getCurrentUser);
     };
   }, [dispatch]); // Added dispatch to dependency array for best practice
+  }, [dispatch]);
 };
 
 export default useGetCurrentUser;

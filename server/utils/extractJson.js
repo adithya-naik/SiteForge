@@ -16,9 +16,10 @@ const extractJson = (text) => {
     const jsonString = cleaned.slice(firstBrace, lastBrace + 1);
     return JSON.parse(jsonString);
 
-  } catch (e) {
+  } catch (error) {
     // JSON.parse failed — HTML inside "code" likely has unescaped quotes
     // manually extract message and code
+    console.log(`Error Occured ${error}`);
     try {
       const messageMatch = text.match(/"message"\s*:\s*"([^"]*)"/);
       const codeStart = text.indexOf('"code"');
@@ -28,7 +29,7 @@ const extractJson = (text) => {
       const afterCodeKey = text.slice(codeStart + 6); // skip past "code"
       const colonIdx = afterCodeKey.indexOf(':');
       const afterColon = afterCodeKey.slice(colonIdx + 1).trimStart();
-      
+
       if (!afterColon.startsWith('"')) return null;
 
       // everything between first and last quote
