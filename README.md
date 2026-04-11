@@ -1,6 +1,6 @@
 # SiteForge
 
-> A full-stack MERN application with automated linting, CI/CD via GitHub Actions, and AI-assisted code review through CodeRabbit.
+> Build & deploy websites instantly using AI — full SaaS with payments.
 
 [![CI](https://github.com/adithya-naik/SiteForge/actions/workflows/ci.yml/badge.svg)](https://github.com/adithya-naik/SiteForge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,46 +10,92 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Available Scripts](#available-scripts)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Code Style & Linting](#code-style--linting)
-- [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+- [SiteForge](#siteforge)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Architecture](#architecture)
+  - [Tech Stack](#tech-stack)
+  - [Project Structure](#project-structure)
+  - [Prerequisites](#prerequisites)
+  - [Environment Variables](#environment-variables)
+    - [`server/.env`](#serverenv)
+    - [`client/.env`](#clientenv)
+  - [Getting Started](#getting-started)
+    - [1. Clone the Repository](#1-clone-the-repository)
+    - [2. Backend Setup](#2-backend-setup)
+    - [3. Firebase Setup](#3-firebase-setup)
+    - [4. OpenRouter Setup](#4-openrouter-setup)
+    - [5. Stripe Setup](#5-stripe-setup)
+      - [5a. Get your API keys](#5a-get-your-api-keys)
+      - [5b. Set up a webhook (local development)](#5b-set-up-a-webhook-local-development)
+      - [5c. For production](#5c-for-production)
+    - [6. Frontend Setup](#6-frontend-setup)
+  - [Available Scripts](#available-scripts)
+    - [Backend (`server/`)](#backend-server)
+    - [Frontend (`client/`)](#frontend-client)
+  - [CI/CD Pipeline](#cicd-pipeline)
+  - [Code Style \& Linting](#code-style--linting)
+  - [Contributing](#contributing)
+    - [Step 1 — Fork and clone](#step-1--fork-and-clone)
+    - [Step 2 — Create a branch](#step-2--create-a-branch)
+    - [Step 3 — Install dependencies](#step-3--install-dependencies)
+    - [Step 4 — Make changes, lint, and commit](#step-4--make-changes-lint-and-commit)
+    - [Step 5 — Sync and push](#step-5--sync-and-push)
+  - [Contributors](#contributors)
+  - [Troubleshooting](#troubleshooting)
+  - [License](#license)
 
 ---
 
 ## Overview
 
-SiteForge is a full-stack web application built with the MERN stack (MongoDB, Express.js, React, Node.js). It follows a monorepo-style structure with separate `client` and `server` directories, each independently configured for linting and builds. The repository ships with a GitHub Actions CI pipeline that automatically lints, builds, and reviews every push and pull request.
+SiteForge is a production-grade AI Website Builder SaaS built on the MERN stack. Users describe their idea, the AI generates a complete website, and they can deploy it with a single click. The platform includes a credit-based system, Stripe payments, Google OAuth via Firebase, and smooth UI animations — all deployed on Render.
 
 ---
 
-## Project Structure
+## Features
+
+- **AI Website Generation** — Describe your idea and get a fully generated website instantly via OpenRouter
+- **One-Click Deployment** — Deploy generated websites without leaving the app
+- **Credit-Based System** — Users spend credits to generate and deploy websites
+- **Stripe Payments** — Secure credit purchases via Stripe Checkout and Webhooks
+- **Google Auth** — Firebase-powered Google Sign-In with protected routes
+- **Premium Animations** — Smooth UI with Framer Motion
+- **Redux State Management** — Global auth and user state with Redux Toolkit
+- **CI/CD Pipeline** — Automated lint, build, and code review on every push and PR
+
+---
+
+## Architecture
 
 ```
-SiteForge/
-├── client/                   # React frontend (Vite + React 18)
-│   ├── src/
-│   ├── public/
-│   ├── eslint.config.js
-│   └── package.json
-├── server/                   # Node.js + Express backend
-│   ├── src/
-│   ├── eslint.config.js
-│   └── package.json
-├── .github/
-│   └── workflows/
-│       └── ci.yml            # GitHub Actions CI workflow
-├── .gitignore
-├── package.json              # Root-level scripts (optional)
-└── README.md
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT (React + Vite)                │
+│                                                             │
+│   Home ──► Generate ──► Editor ──► Dashboard               │
+│                │                       │                    │
+│          Firebase Auth           Redux Store                │
+│         (Google OAuth)         (user, credits)              │
+└────────────────────────┬────────────────────────────────────┘
+                         │ REST API (Axios)
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  SERVER (Node.js + Express)                 │
+│                                                             │
+│  /api/auth  ──► Auth Controller  ──► JWT Middleware         │
+│  /api/user  ──► User Controller                             │
+│  /api/website ► Website Controller ──► OpenRouter API       │
+│                                    ──► Deploy Logic         │
+│                                                             │
+│  Stripe Webhooks ──► Credit Updates                         │
+└───────────────┬─────────────────────────────────────────────┘
+                │ Mongoose ODM
+                ▼
+┌─────────────────────────┐
+│   MongoDB (Atlas / Local) │
+│   users | websites       │
+└─────────────────────────┘
 ```
 
 ---
@@ -58,102 +104,238 @@ SiteForge/
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite, JavaScript |
+| Frontend | React 18, Vite, Tailwind CSS, Framer Motion |
+| State Management | Redux Toolkit |
 | Backend | Node.js, Express.js |
-| Database | MongoDB |
+| Database | MongoDB + Mongoose |
+| Authentication | Firebase (Google OAuth) + JWT |
+| AI | OpenRouter API |
+| Payments | Stripe (Checkout + Webhooks) |
 | Linting | ESLint (client + server) |
-| CI/CD | GitHub Actions |
-| Code Review | CodeRabbit |
+| CI/CD | GitHub Actions, CodeRabbit, SonarCloud |
 
 ---
 
-## Features
+## Project Structure
 
-**Backend**
-- RESTful API with Node.js and Express
-- ESLint configured for Node/CommonJS environment
-- Clean separation of routes, controllers, and middleware
-
-**Frontend**
-- React 18 with Vite for fast HMR development builds
-- ESLint with the `react` plugin; `react/react-in-jsx-scope` disabled (React 17+ new JSX transform)
-- Component-based architecture ready for scaling
-
-**CI/CD Pipeline**
-- Triggers on every `push` and `pull_request`
-- Node modules cached separately for `client` and `server` to speed up runs
-- Steps: checkout → cache → install → lint → build → CodeRabbit review
-
-**Automated Code Review**
-- CodeRabbit reviews every pull request automatically
-- Uses `GITHUB_TOKEN` — no additional secrets required
+```
+SiteForge/
+├─ .github/
+│  ├─ workflows/
+│  │  ├─ auto-assign.yml
+│  │  ├─ ci.yml
+│  │  ├─ greetings.yml
+│  │  ├─ label.yml
+│  │  ├─ sonarcloud.yml
+│  │  └─ summary.yml
+│  ├─ auto_assign.yml
+│  ├─ dependabot.yml
+│  ├─ labeler.yml
+│  └─ pull_request_template.md
+├─ client/
+│  ├─ public/
+│  ├─ src/
+│  │  ├─ assets/
+│  │  ├─ components/
+│  │  │  └─ LoginModal.jsx
+│  │  ├─ hooks/
+│  │  │  └─ useGetCurrentUser.jsx
+│  │  ├─ pages/
+│  │  │  ├─ Dashboard.jsx
+│  │  │  ├─ Editor.jsx
+│  │  │  ├─ Generate.jsx
+│  │  │  └─ Home.jsx
+│  │  ├─ redux/
+│  │  │  ├─ store.js
+│  │  │  └─ userSlice.js
+│  │  ├─ firebase.js
+│  │  └─ App.jsx
+│  ├─ .env
+│  ├─ eslint.config.js
+│  └─ package.json
+├─ server/
+│  ├─ config/
+│  │  ├─ db.js
+│  │  └─ openRouter.js
+│  ├─ controllers/
+│  │  ├─ auth.controller.js
+│  │  ├─ user.controller.js
+│  │  └─ website.controller.js
+│  ├─ middlewares/
+│  │  └─ isAuth.js
+│  ├─ models/
+│  │  ├─ user.model.js
+│  │  └─ website.model.js
+│  ├─ routes/
+│  ├─ utils/
+│  │  └─ extractJson.js
+│  ├─ .env
+│  ├─ index.js
+│  └─ package.json
+├─ CODE_OF_CONDUCT.md
+├─ LICENSE
+└─ README.md
+```
 
 ---
 
 ## Prerequisites
 
-Make sure you have the following installed before cloning:
+Make sure the following are installed before you begin:
 
 - [Node.js](https://nodejs.org/) v18 or higher
 - [npm](https://www.npmjs.com/) v9 or higher
-- [MongoDB](https://www.mongodb.com/) (local or via [MongoDB Atlas](https://www.mongodb.com/atlas))
+- [MongoDB](https://www.mongodb.com/) (local) or a [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
 - [Git](https://git-scm.com/)
 
-To verify:
-
 ```bash
-node -v    # Should be v18+
-npm -v     # Should be v9+
+node -v    # v18+
+npm -v     # v9+
 git --version
 ```
+
+You will also need accounts on the following platforms (all free tiers work):
+
+- [Firebase](https://firebase.google.com/) — for Google Auth
+- [OpenRouter](https://openrouter.ai/) — for AI website generation
+- [Stripe](https://stripe.com/) — for credit purchases
+
+---
+
+## Environment Variables
+
+### `server/.env`
+
+```dotenv
+PORT=
+MONGO_URL=
+JWTSECRET=
+OPEN_ROUTER_API_KEY=
+```
+
+### `client/.env`
+
+```dotenv
+VITE_FIREBASE_API_KEY=
+```
+
+> **Never commit `.env` files.** Both are already listed in `.gitignore`.
+
+> **Note:** Stripe environment variables will be added here once Stripe integration is configured. See the [Stripe Setup](#5-stripe-setup) section for what to expect.
 
 ---
 
 ## Getting Started
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/SiteForge.git
+git clone https://github.com/adithya-naik/SiteForge.git
 cd SiteForge
 ```
 
-### 2. Set up the backend
+---
+
+### 2. Backend Setup
 
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file inside `server/`:
+Create `server/.env` and fill in the values (see [Environment Variables](#environment-variables)).
 
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/siteforge
-```
+**MongoDB — choose one:**
 
-Start the development server:
+- **Local:** Start MongoDB (`mongod`) and set `MONGO_URL=mongodb://localhost:27017/siteforge`
+- **Atlas:** Create a free cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas), whitelist your IP, and copy the connection string into `MONGO_URL`
+
+Start the dev server:
 
 ```bash
 npm run dev
+# Server running at http://localhost:5000
 ```
 
-The backend will be running at `http://localhost:5000`.
+---
 
-### 3. Set up the frontend
+### 3. Firebase Setup
+
+Firebase is used for **Google Sign-In** on the frontend.
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/) and click **Add project**.
+2. Give it a name (e.g. `siteforge`) and complete the setup wizard.
+3. In the left sidebar, go to **Build → Authentication → Sign-in method**.
+4. Enable **Google** as a provider and save.
+5. Go to **Project Settings** (gear icon) → **General** → scroll to **Your apps**.
+6. Click **Add app → Web**, register the app, and copy the `firebaseConfig` object.
+7. Add each value from `firebaseConfig` to `client/.env` using the `VITE_FIREBASE_` prefix as shown above.
+
+The `client/src/firebase.js` file already reads these variables — no code changes needed.
+
+---
+
+### 4. OpenRouter Setup
+
+OpenRouter provides access to many AI models (GPT-4, Claude, Gemini, etc.) through a single API key.
+
+1. Sign up at [openrouter.ai](https://openrouter.ai/).
+2. Go to **Keys** and create a new API key.
+3. Add the key to `server/.env` as `OPEN_ROUTER_API_KEY`.
+4. In `server/config/openRouter.js`, you can swap the model string to change which AI model powers the generator (e.g. `openai/gpt-4o`, `anthropic/claude-3-5-sonnet`).
+
+Free-tier credits are available on sign-up, which is enough for development.
+
+---
+
+### 5. Stripe Setup
+
+Stripe handles credit purchases. You need both a **secret key** and a **webhook secret**.
+
+#### 5a. Get your API keys
+
+1. Sign up or log in at [dashboard.stripe.com](https://dashboard.stripe.com/).
+2. Go to **Developers → API keys**.
+3. Copy the **Secret key** (`sk_test_...`) and add it to `server/.env` as `STRIPE_SECRET_KEY`.
+
+#### 5b. Set up a webhook (local development)
+
+Stripe needs to reach your local server to confirm payments. Use the [Stripe CLI](https://stripe.com/docs/stripe-cli):
+
+```bash
+# Install Stripe CLI (macOS)
+brew install stripe/stripe-cli/stripe
+
+# Log in
+stripe login
+
+# Forward webhook events to your local server
+stripe listen --forward-to localhost:5000/api/stripe/webhook
+```
+
+Copy the **webhook signing secret** printed in the terminal (`whsec_...`) and add it to `server/.env` as `STRIPE_WEBHOOK_SECRET`.
+
+#### 5c. For production
+
+Create a webhook endpoint in the Stripe Dashboard under **Developers → Webhooks**, pointing to `https://your-domain.com/api/stripe/webhook`, and select the `checkout.session.completed` event.
+
+---
+
+### 6. Frontend Setup
 
 ```bash
 cd ../client
 npm install
 ```
 
+Create `client/.env` and fill in the Firebase and backend values (see [Environment Variables](#environment-variables)).
+
 Start the Vite dev server:
 
 ```bash
 npm run dev
+# Frontend running at http://localhost:5173
 ```
-
-The frontend will be running at `http://localhost:5173`.
 
 ---
 
@@ -186,26 +368,16 @@ The GitHub Actions workflow at `.github/workflows/ci.yml` runs on every `push` a
 
 **Pipeline steps:**
 
-1. **Checkout** — checks out the repository code
-2. **Setup Node.js** — installs Node.js 18
-3. **Cache dependencies** — caches `client/node_modules` and `server/node_modules` separately using `actions/cache@v3`
-4. **Install dependencies** — runs `npm install` in both `client` and `server`
+1. **Checkout** — checks out the repository
+2. **Setup Node.js 18** — installs the correct runtime
+3. **Cache dependencies** — caches `client/node_modules` and `server/node_modules` separately
+4. **Install** — runs `npm install` in both `client` and `server`
 5. **Lint** — runs `npm run lint` in both directories
 6. **Build** — runs `npm run build` in `client`
-7. **CodeRabbit review** — automatically reviews pull requests
+7. **CodeRabbit** — automatically reviews pull requests (uses `GITHUB_TOKEN`, no setup needed)
+8. **SonarCloud** — static code analysis on every push
 
-**CodeRabbit step (from `ci.yml`):**
-
-```yaml
-- name: Run CodeRabbit
-  uses: coderabbitio/code-review-action@v1
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-`GITHUB_TOKEN` is automatically provided by GitHub Actions — no manual configuration needed.
-
-**Testing the workflow locally with `act`:**
+**Test locally with `act`:**
 
 ```bash
 # Install act: https://github.com/nektos/act
@@ -216,20 +388,18 @@ act -j build
 
 ## Code Style & Linting
 
-ESLint is configured independently in both `client` and `server`.
+ESLint is configured independently in both workspaces.
 
-- **Backend**: `server/eslint.config.js` — Node.js environment rules
-- **Frontend**: `client/eslint.config.js` — React plugin with JSX rules
+- **Backend** — `server/eslint.config.js` uses Node.js/CommonJS environment rules
+- **Frontend** — `client/eslint.config.js` uses the React plugin with `react/react-in-jsx-scope` disabled (React 17+ JSX transform no longer requires React in scope)
 
-Key configuration note: `react/react-in-jsx-scope` is **disabled** because React 17+ no longer requires React to be in scope when using JSX.
-
-Run linting across both workspaces from the root:
+Run linting across both workspaces:
 
 ```bash
 cd server && npm run lint && cd ../client && npm run lint
 ```
 
-Auto-fix fixable issues:
+Auto-fix safe issues:
 
 ```bash
 npm run lint:fix   # Run inside client/ or server/
@@ -239,36 +409,24 @@ npm run lint:fix   # Run inside client/ or server/
 
 ## Contributing
 
-Thank you for considering a contribution to SiteForge! This section walks you through everything you need to get up and running as a contributor.
+Thank you for considering a contribution to SiteForge!
 
 ### Step 1 — Fork and clone
-
-1. Click **Fork** on the top-right of this repository's GitHub page.
-2. Clone your fork locally:
 
 ```bash
 git clone https://github.com/<your-username>/SiteForge.git
 cd SiteForge
-```
-
-3. Add the upstream remote so you can pull in future changes:
-
-```bash
-git remote add upstream https://github.com/<original-username>/SiteForge.git
+git remote add upstream https://github.com/adithya-naik/SiteForge.git
 git fetch upstream
 ```
 
 ### Step 2 — Create a branch
 
-Always work on a new branch. Never commit directly to `main`.
-
 ```bash
 git checkout -b feat/your-feature-name
-# or for bug fixes:
-git checkout -b fix/your-bug-description
 ```
 
-Branch naming conventions:
+Branch naming:
 
 | Prefix | When to use |
 |---|---|
@@ -284,76 +442,40 @@ Branch naming conventions:
 cd server && npm install && cd ../client && npm install
 ```
 
-### Step 4 — Make your changes
-
-- Keep changes focused. One feature or fix per pull request.
-- Follow existing code style — ESLint will catch most issues.
-- Add or update comments where the logic is non-obvious.
-- If you're adding a new API endpoint, update or add relevant documentation.
-
-### Step 5 — Lint before committing
+### Step 4 — Make changes, lint, and commit
 
 ```bash
+# Lint before committing
 cd server && npm run lint
 cd ../client && npm run lint
-```
 
-Fix any lint errors before pushing. You can run `npm run lint:fix` to auto-fix safe issues.
-
-### Step 6 — Commit your changes
-
-Write clear, descriptive commit messages:
-
-```bash
+# Commit with Conventional Commits format
 git add .
 git commit -m "feat: add user authentication with JWT"
 ```
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/) format where possible:
-
-```
-<type>: <short description>
-
-[optional body]
-
-[optional footer]
-```
-
-### Step 7 — Sync with upstream (avoid merge conflicts)
-
-Before pushing, pull in any upstream changes:
+### Step 5 — Sync and push
 
 ```bash
 git fetch upstream
 git rebase upstream/main
-```
-
-### Step 8 — Push and open a pull request
-
-```bash
 git push origin feat/your-feature-name
 ```
 
-Then open a pull request on GitHub:
+Then open a pull request on GitHub. CI will run automatically and CodeRabbit will post a review.
 
-1. Go to your fork on GitHub.
-2. Click **Compare & pull request**.
-3. Fill in the PR template — describe what changed and why.
-4. Request a review if needed.
+**Contribution guidelines:**
+- Do not commit `node_modules`, `.env` files, or build artifacts
+- Keep PRs small and focused — one feature or fix per PR
+- If unsure about a large change, open an issue first to discuss
 
-**What happens next:**
+---
 
-- GitHub Actions CI will run automatically (lint + build).
-- CodeRabbit will post an automated code review on your PR.
-- A maintainer will review and either merge or leave feedback.
+## Contributors
 
-### Contribution guidelines
+Thanks to everyone who has contributed to SiteForge!
 
-- Do not commit `node_modules`, `.env` files, or build artifacts.
-- Keep PRs small and reviewable. Large PRs are harder to merge.
-- Be respectful and constructive in code review discussions.
-- If you're fixing a bug, consider adding a note describing how to reproduce it.
-- If you're unsure about a large change, open an issue first to discuss the approach.
+[![Contributors](https://contrib.rocks/image?repo=adithya-naik/SiteForge)](https://github.com/adithya-naik/SiteForge/graphs/contributors)
 
 ---
 
@@ -367,11 +489,9 @@ npm install --legacy-peer-deps
 
 **ESLint error: `'React' must be in scope when using JSX`**
 
-This is already handled — ensure `react/react-in-jsx-scope: off` is set in `client/eslint.config.js`.
+Ensure `react/react-in-jsx-scope: off` is set in `client/eslint.config.js`. This is already the default in this repo.
 
 **MongoDB connection refused**
-
-Make sure MongoDB is running:
 
 ```bash
 # macOS (Homebrew)
@@ -381,24 +501,30 @@ brew services start mongodb-community
 sudo systemctl start mongod
 ```
 
-Or use MongoDB Atlas and update `MONGO_URI` in your `.env`.
+Or switch to MongoDB Atlas and update `MONGO_URL` in `server/.env`.
+
+**Firebase: `auth/unauthorized-domain` error**
+
+Go to **Firebase Console → Authentication → Settings → Authorized domains** and add `localhost`.
+
+**Stripe webhook signature verification failed**
+
+Make sure `STRIPE_WEBHOOK_SECRET` matches the secret shown when you ran `stripe listen`. Restart the server after updating `.env`.
+
+**OpenRouter: 401 Unauthorized**
+
+Double-check that `OPEN_ROUTER_API_KEY` is set correctly in `server/.env` and that the key has not expired or been revoked.
 
 **Port already in use**
 
 ```bash
-# Find the process using the port (e.g., 5000)
-lsof -i :5000
-
-# Kill it
-kill -9 <PID>
+lsof -i :5000     # Find the process
+kill -9 <PID>     # Kill it
 ```
 
 **CI workflow fails on GitHub Actions**
 
-Check the Actions tab on GitHub for detailed logs. Common causes:
-- Missing `npm run lint` or `npm run build` scripts in `package.json`
-- Uncommitted `eslint.config.js` changes
-- Node version mismatch (workflow uses Node 18)
+Check the **Actions** tab for detailed logs. Common causes: missing lint/build scripts in `package.json`, uncommitted `eslint.config.js` changes, or Node version mismatch (workflow uses Node 18).
 
 ---
 
