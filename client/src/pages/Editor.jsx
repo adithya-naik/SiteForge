@@ -2,9 +2,11 @@ import axios from "axios";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { serverURL } from "../App";
-import { Code2, Monitor, Rocket, Send } from "lucide-react";
+import { Code2, Monitor, Rocket, Send, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import Editor from "@monaco-editor/react";
 
-const Editor = () => {
+const WebsiteEditor = () => {
   const { id } = useParams();
   const [website, setWebsite] = useState(null);
   const [error, setError] = useState("");
@@ -15,6 +17,7 @@ const Editor = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const iframeRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [showCode, setShowCode] = useState(false);
 
   const thinkingSteps = [
     "Understanding your request...",
@@ -70,15 +73,12 @@ const Editor = () => {
         axios.post(
           `${serverURL}/api/website/update/${id}`,
           { prompt: userPrompt },
-          { withCredentials: true }
+          { withCredentials: true },
         ),
         new Promise((res) => setTimeout(res, 5000)),
       ]);
 
-      setMessages((m) => [
-        ...m,
-        { role: "ai", content: result.data.message },
-      ]);
+      setMessages((m) => [...m, { role: "ai", content: result.data.message }]);
 
       setCode(result.data.code);
     } catch (error) {
@@ -94,7 +94,7 @@ const Editor = () => {
       try {
         const result = await axios.get(
           `${serverURL}/api/website/get-by-id/${id}`,
-          { withCredentials: true }
+          { withCredentials: true },
         );
         setWebsite(result.data);
         setCode(result.data.latestCode);
@@ -123,7 +123,7 @@ const Editor = () => {
 
       const injected = stripped.replace(
         /<\/body>/i,
-        `${scripts.join("\n")}</body>`
+        `${scripts.join("\n")}</body>`,
       );
 
       return injected.includes("</body>")
@@ -156,13 +156,11 @@ const Editor = () => {
 
   return (
     <div className="h-screen w-screen flex bg-black text-white overflow-hidden">
-      
       {/* Sidebar */}
       <aside className="hidden lg:flex w-[380px] flex-col border-r border-white/10 bg-black/80">
         <Header />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             {messages.map((msg, i) => (
@@ -188,13 +186,11 @@ const Editor = () => {
             {updateLoading && (
               <div className="max-w-[85%] mr-auto">
                 <div className="px-4 py-3 rounded-2xl text-xs bg-white/5 border border-white/10 text-zinc-400">
-                  {thinkingSteps
-                    .slice(0, currentStep + 1)
-                    .map((step, i) => (
-                      <div key={i}>
-                        {i === currentStep ? "⏳" : "✔️"} {step}
-                      </div>
-                    ))}
+                  {thinkingSteps.slice(0, currentStep + 1).map((step, i) => (
+                    <div key={i}>
+                      {i === currentStep ? "⏳" : "✔️"} {step}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -231,7 +227,7 @@ const Editor = () => {
             <button className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-sm font-semibold">
               <Rocket size={18} /> Deploy
             </button>
-            <button className="p-2">
+            <button onClick={() => setShowCode(true)} className="p-2">
               <Code2 size={18} />
             </button>
             <button className="p-2">
@@ -242,6 +238,31 @@ const Editor = () => {
 
         <iframe ref={iframeRef} className="flex-1 w-full bg-white" />
       </div>
+
+      <AnimatePresence>
+        {showCode && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            className="fixed inset-y-0 right-0 w-full lg:w-[45%] z-[9999] bg-[#1e1e1e] flex flex-col"
+          >
+            <div className="h-12 px-4 flex justify-between items-center border-b border-white/10 bg-[#1e1e1e]">
+              <span className="text-sm font-medium">index.html</span>
+              <button onClick={() => setShowCode(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <Editor 
+            theme="vs-dark"
+            value={code}
+            language="html"
+            onChange={(v)=>setCode(v)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -254,4 +275,4 @@ const Editor = () => {
   }
 };
 
-export default Editor;
+export default WebsiteEditor;
