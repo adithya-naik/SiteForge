@@ -6,8 +6,10 @@ import axios from "axios";
 import { serverURL } from "../App";
 import { useDispatch } from "react-redux";
 import { setuserData } from "../redux/userSlice";
+
 const LoginModal = ({ open, onClose }) => {
   const dispatch = useDispatch();
+
   const handleGoogleAuth = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -21,7 +23,9 @@ const LoginModal = ({ open, onClose }) => {
         { withCredentials: true },
       );
       dispatch(setuserData(data));
-      window.location.reload();
+      // Replaced window.location.reload() with a custom event so the
+      // useGetCurrentUser hook re-fetches user data reactively — no hard reload.
+      window.dispatchEvent(new Event("auth-change"));
       onClose();
     } catch (error) {
       console.log(error);
