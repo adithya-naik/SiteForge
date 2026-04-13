@@ -8,7 +8,9 @@ import Generate from "./pages/Generate";
 import WebsiteEditor from "./pages/Editor";
 
 export const serverURL = "http://localhost:8000";
-
+const [user, setUser] = useState(null);
+<Navbar user={user} />
+<Login setUser={setUser} />
 const App = () => {
   useGetCurrentUser();
   const { userData } = useSelector((state) => state.user);
@@ -33,5 +35,6 @@ const App = () => {
     </BrowserRouter>
   );
 };
+
 
 export default App;
